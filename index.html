@@ -1392,17 +1392,13 @@ async function initDailySurprise(){
   const badge = document.getElementById('dayBadge');
   let dayNum = 1;
   try{
-    let firstVisit = null;
-    try{
-      const r = await window.storage.get('first-visit-date');
-      if(r && r.value) firstVisit = r.value;
-    }catch(e){ firstVisit = null; }
+    let firstVisit = localStorage.getItem('first-visit-date');
 
     const todayStr = localDateStr(new Date());
 
     if(!firstVisit){
       firstVisit = todayStr;
-      try{ await window.storage.set('first-visit-date', firstVisit); }catch(e){}
+      try{ localStorage.setItem('first-visit-date', firstVisit); }catch(e){}
     }
     dayNum = daysBetweenLocalDateStrings(firstVisit, todayStr) + 1;
   }catch(e){ dayNum = 1; }
@@ -1437,7 +1433,7 @@ function openLetter(key){
   document.getElementById('owModal').style.display='flex';
 }
 
-/* ============ Future plans checklist (persisted with window.storage) ============ */
+/* ============ Future plans checklist (persisted with localStorage) ============ */
 const planItems = [
   {id:'p1', label:'أول قهوة بعد الرجوع ☕'},
   {id:'p2', label:'أول خروجة 🚶‍♀️'},
@@ -1449,8 +1445,8 @@ async function initChecklist(){
   const wrap = document.getElementById('checklist');
   let saved = {};
   try{
-    const r = await window.storage.get('future-plans-checklist');
-    if(r && r.value) saved = JSON.parse(r.value);
+    const v = localStorage.getItem('future-plans-checklist');
+    if(v) saved = JSON.parse(v);
   }catch(e){ saved = {}; }
 
   planItems.forEach(item=>{
@@ -1461,7 +1457,7 @@ async function initChecklist(){
       saved[item.id] = !saved[item.id];
       el.classList.toggle('done');
       el.querySelector('.box').textContent = saved[item.id] ? '✓' : '';
-      try{ await window.storage.set('future-plans-checklist', JSON.stringify(saved)); }catch(e){}
+      try{ localStorage.setItem('future-plans-checklist', JSON.stringify(saved)); }catch(e){}
     };
     wrap.appendChild(el);
   });
