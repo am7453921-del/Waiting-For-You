@@ -403,6 +403,7 @@
 /* ============ CONFIG — عدّل هنا لو حبيت ============ */
 const SITE_PASSWORD = "1806"; // ⚠️ غيّر الرقم ده لأي 4 أرقام تحبها إنتي واحمد متفقين عليها
 const RETURN_DATE = "2026-08-05T00:00:00+03:00"; // تاريخ رجوعها (توقيت القاهرة)
+const START_DATE = "2026-07-18"; // Day 1 لأي حد فاتح اللينك، ثابت للكل
 
 const photos = [
 "data:image/jpeg;base64,"+
@@ -1377,8 +1378,8 @@ function initCountdownStats(){
 }
 
 /* ============ Daily surprise ============ */
-/* اليوم بيتغير مع نص الليل بتوقيت اللي فاتح الموقع (يعني موبايل مالاك لو هي اللي فاتحاه) */
-/* Day 1 = أول يوم هي تفتح فيه اللينك، ومحفوظ عشان ميتغيرش لو دخلت تاني */
+/* اليوم بيتغير مع نص الليل بتوقيت الموبايل اللي بيفتح الموقع (كل حد بتوقيته هو) */
+/* Day 1 = 18/7 ثابت للكل، الرقم نفسه لأي حد فاتح في نفس اليوم التقويمي */
 function localDateStr(d){
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
@@ -1387,24 +1388,21 @@ function daysBetweenLocalDateStrings(a,b){
   const db = new Date(b+'T00:00:00');
   return Math.round((db-da)/86400000);
 }
-async function initDailySurprise(){
+let lastRenderedDay = null;
+function renderDailySurprise(){
   const box = document.getElementById('surpriseBox');
   const badge = document.getElementById('dayBadge');
   let dayNum = 1;
   try{
-    let firstVisit = localStorage.getItem('first-visit-date');
-
     const todayStr = localDateStr(new Date());
-
-    if(!firstVisit){
-      firstVisit = todayStr;
-      try{ localStorage.setItem('first-visit-date', firstVisit); }catch(e){}
-    }
-    dayNum = daysBetweenLocalDateStrings(firstVisit, todayStr) + 1;
+    dayNum = daysBetweenLocalDateStrings(START_DATE, todayStr) + 1;
   }catch(e){ dayNum = 1; }
 
   if(dayNum > 19) dayNum = 19;
   if(dayNum < 1) dayNum = 1;
+  if(dayNum === lastRenderedDay) return; // مفيش تغيير، مفيش داعي نعيد الرسم
+  lastRenderedDay = dayNum;
+
   badge.textContent = 'Day ' + dayNum;
   const content = getDayContent(dayNum);
   let html = '';
@@ -1417,6 +1415,11 @@ async function initDailySurprise(){
     if(content.msg) html += `<div class="msg">${content.msg}</div>`;
   }
   box.innerHTML = html;
+}
+function initDailySurprise(){
+  renderDailySurprise();
+  // بيفحص كل دقيقة، فلو نص الليل جه وهي فاتحة الموقع أصلًا، المفاجأة الجديدة تتحدث لوحدها من غير ما تعمل ريفرش
+  setInterval(renderDailySurprise, 60000);
 }
 
 /* ============ Random memory ============ */
