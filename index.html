@@ -340,8 +340,8 @@
     <div class="eyebrow">Same Sky</div>
     <h2>Today's Weather</h2>
     <div class="weather-cards">
-      <div class="w-card"><div class="city">🌍 Egypt</div><div class="icon">☀️</div><div class="temp">~36°</div></div>
-      <div class="w-card"><div class="city">🌍 Taiwan</div><div class="icon">🌦️</div><div class="temp">~30°</div></div>
+      <div class="w-card"><div class="city">🌍 Egypt</div><div class="icon" id="wIconEgypt">☀️</div><div class="temp" id="wTempEgypt">--°</div></div>
+      <div class="w-card"><div class="city">🌍 Taiwan</div><div class="icon" id="wIconTaiwan">🌦️</div><div class="temp" id="wTempTaiwan">--°</div></div>
     </div>
     <div class="note">Different weather... Same sky ❤️</div>
   </section>
@@ -1339,6 +1339,37 @@ function initMain(){
   initDailySurprise();
   initChecklist();
   initEndingObserver();
+  initLiveWeather();
+}
+
+/* ============ Live weather (real, from Open-Meteo — free, no API key) ============ */
+function weatherEmoji(code){
+  if(code===0) return '☀️';
+  if([1,2].includes(code)) return '🌤️';
+  if(code===3) return '☁️';
+  if([45,48].includes(code)) return '🌫️';
+  if([51,53,55,56,57].includes(code)) return '🌦️';
+  if([61,63,65,66,67,80,81,82].includes(code)) return '🌧️';
+  if([71,73,75,77,85,86].includes(code)) return '❄️';
+  if([95,96,99].includes(code)) return '⛈️';
+  return '🌡️';
+}
+async function fetchCityWeather(lat, lon, tempElId, iconElId){
+  try{
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const temp = Math.round(data.current.temperature_2m);
+    const code = data.current.weather_code;
+    document.getElementById(tempElId).textContent = temp + '°';
+    document.getElementById(iconElId).textContent = weatherEmoji(code);
+  }catch(e){
+    // لو الإنترنت مقطوع أو الـ API مش راضي يرد، سيب القيمة الافتراضية زي ما هي من غير ما يبوظ حاجة
+  }
+}
+function initLiveWeather(){
+  fetchCityWeather(30.0444, 31.2357, 'wTempEgypt', 'wIconEgypt');   // القاهرة
+  fetchCityWeather(24.8138, 120.9675, 'wTempTaiwan', 'wIconTaiwan'); // هسينشو، تايوان
 }
 
 /* ============ Time difference (live, DST-safe) ============ */
